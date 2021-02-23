@@ -6,7 +6,7 @@ from tkinter import *
 class BAP(BAP_GUI.FenPrincipale):
     def __init__(self):
         BAP_GUI.FenPrincipale.__init__(self)
-        self.__bouton4 = Button(self, text='Calcul', command=self.resolve).pack(side=LEFT, padx=5, pady=5)
+        self.__bouton6 = Button(self, text='Calcul', command=self.resolve).pack(side=LEFT, padx=5, pady=5)
         self.bus = None
 
     def dist_matrix(self):
@@ -16,14 +16,30 @@ class BAP(BAP_GUI.FenPrincipale):
         return (X**2+Y**2)**0.5
 
     def cal_matrix(self):
-        self.temps_matrix = self.dist_matrix()
+        distance_matrix = self.dist_matrix()
+        distance_change = self.route_info[:,:,0]
+        change_id = np.where(distance_change!=-1)[0]
+        distance_matrix[change_id] = distance_change[change_id]
+        vitesse_matrix = self.route_info[:,:,1]
+        vitesse_matrix = np.where(vitesse_matrix!=-1, vitesse_matrix, 1)
+        vitesse_matrix = np.where(vitesse_matrix!=0, vitesse_matrix, 1e-15)
+        freq_matrix = self.route_info[:,:,2]
+        freq_matrix = np.where(freq_matrix!=-1, freq_matrix, 1)
+        freq_matrix = np.where(freq_matrix!=0, freq_matrix, 1e-15)
+        lib_matrix = self.route_info[:,:,3]
+        lib_matrix = np.where(lib_matrix!=-1, lib_matrix, 1)
+        n = len(self.liste_node)
+        lib_matrix -= np.repeat(np.array(self.noeud_info)[:,1],n).reshape([n,n])
+        lib_matrix = np.where(lib_matrix!=0, lib_matrix, 1e-15)
+        besoin_matrix = np.repeat(np.array(self.noeud_info)[:,0],n).reshape([n,n])
+        self.temps_matrix = distance_matrix/vitesse_matrix+1/freq_matrix*besoin_matrix/lib_matrix
 
-    def ajouter_noeud(self,x,y):
-        BAP_GUI.FenPrincipale.ajouter_noeud(self,x,y)
+    def ajouter_noeud(self,event):
+        BAP_GUI.FenPrincipale.ajouter_noeud(self,event)
         self.bus = None
 
-    def supprimer_noeud(self,x,y):
-        BAP_GUI.FenPrincipale.supprimer_noeud(self,x,y)
+    def supprimer_noeud(self,event):
+        BAP_GUI.FenPrincipale.supprimer_noeud(self,event)
         self.bus = None
     
     def resolve(self):
