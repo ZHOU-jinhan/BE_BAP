@@ -3,8 +3,9 @@ import copy
 from typing import List
 
 class Passage:
-    def __init__(self, nb_arrete: int, temps_graph: List, arrete_m: int,\
+    def __init__(self, bus, nb_arrete: int, temps_graph: List, arrete_m: int,\
                  alpha: float=4.0, beta: float=1.0):
+        self.bus = bus
         self.nb_arrete = nb_arrete
         self.temps_graph = temps_graph
         self.temps_graph_ext = np.append(np.append(self.temps_graph,\
@@ -16,15 +17,44 @@ class Passage:
         self.__reinit()
 
     def __reinit(self):
-        self.pheromone_graph = np.ones([self.nb_arrete,self.nb_arrete])
-        self.temps_tot = 0; self.nb_transition = 0
+        self.temps_tot = 0
         self.arrete_actuelle = np.random.randint(0,self.nb_arrete-1)
         self.arrete_inconnue = np.ones(self.nb_arrete)
         self.arrete_inconnue[self.arrete_actuelle] = 0
         self.path = [self.arrete_actuelle]
 
+    def __genetic(self):
+        self.temps_tot = 0
+        self.arrete_inconnue = np.ones(self.nb_arrete)
+        pere_id,mere_id = np.random.choice(range(100),2)
+        passage_pere = self.bus.passages[pere_id]
+        passage_mere = self.bus.passages[mere_id]
+        self.path = [passage_pere.path[0]];self.arrete_inconnue[passage_pere.path[0]] = 1
+        n = 0
+        for _ in range(1,np.random.randint(0,int(self.nb_arrete/2)-1)):
+            while passage_pere.path[n] == -1:
+                self.path.append(-1);self.path.append(self.arrete_m);n+=2
+                self.arrete_inconnue[self.arrete_m] = 0
+            self.path.append(passage_pere.path[n]);self.arrete_inconnue[passage_pere.path[n]] = 0
+            self.temps_tot += self.temps_graph[self.path[-2],self.path[-1]]
+        n = passage_mere.path.index(self.path[-1])+1
+        id_fin = len(passage_mere.path);conn=0
+        while n<id_fin:
+            while passage_mere.path[n] == -1 or self.arrete_inconnue[passage_mere.path[n]] == 0:
+                if passage_mere.path[n] == -1:
+                    self.path.append(-1);self.path.append(self.arrete_m);n+=1
+                n+=1 
+                if n>=id_fin:
+                    conn=1;break
+            if conn:
+                break
+            self.path.append(passage_mere.path[n]);self.arrete_inconnue[passage_mere.path[n]] = 0
+            self.temps_tot += self.temps_graph[self.path[-2],self.path[-1]]
+        self.arrete_actuelle = self.path[-1]
+        
+
     def __prochain_arrete(self):
-        prochain_arrete_proba = (self.pheromone_graph[self.arrete_actuelle,:]**self.alpha)\
+        prochain_arrete_proba = (self.bus.pheromone_graph[self.arrete_actuelle,:]**self.alpha)\
                                 *((self.temps_graph[self.arrete_actuelle,:]+1e-15)**(-self.beta))
         arrete_acces = np.where(self.arrete_inconnue*prochain_arrete_proba)[0]
         try:
@@ -58,8 +88,11 @@ class Passage:
             self.path.append(prochain_arrete)
         self.arrete_actuelle = prochain_arrete
 
-    def path_cal(self):
-        self.__reinit()
+    def path_cal(self,mode="r"):
+        if mode == "r":
+            self.__reinit()
+        else:
+            self.__genetic()
         while self.arrete_actuelle!=None:
             self.__transition(self.__prochain_arrete())
         if 1 in self.arrete_inconnue:
@@ -81,14 +114,18 @@ class BusPath:
 
     def __reinit(self):
         self.pheromone_graph = np.ones([self.nb_arrete,self.nb_arrete])
-        self.passages = [Passage(self.nb_arrete, self.temps_graph, self.arrete_m) for _ in range(100)]
-        self.best_passage = Passage(self.nb_arrete, self.temps_graph, self.arrete_m)
+        self.passages = [Passage(self, self.nb_arrete, self.temps_graph, self.arrete_m) for _ in range(100)]
+        self.best_passage = Passage(self, self.nb_arrete, self.temps_graph, self.arrete_m)
         self.best_passage.temps_tot = np.inf
         self.iter = 0
 
-    def path(self):
+    def path(self,mode="g"):
         self.iter += 1
-        for passage in self.passages:
+        for passage in self.passages[:50]:
+            passage.path_cal(mode)
+            if passage.temps_tot < self.best_passage.temps_tot:
+                self.best_passage = copy.deepcopy(passage)
+        for passage in self.passages[50:]:
             passage.path_cal()
             if passage.temps_tot < self.best_passage.temps_tot:
                 self.best_passage = copy.deepcopy(passage)

@@ -49,8 +49,11 @@ class BAP(BAP_GUI.FenPrincipale):
         if self.bus == None:
             self.cal_matrix()
             self.bus = BAP_solver.BusPath(len(self.liste_node),self.temps_matrix)
-        for _ in range(50):
-            self.bus.path()
+        for i in range(50):
+            if i == 0:
+                self.bus.path(mode="r")
+            else:
+                self.bus.path()
         self.title("BAP Solver - IterTours = %s"%self.bus.iter)
         print(self.bus.best_passage.path)
         for k in range(1,len(self.bus.best_passage.path)):
