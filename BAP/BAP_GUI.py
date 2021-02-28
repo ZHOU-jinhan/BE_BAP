@@ -190,7 +190,7 @@ class InfoRoute(Tk):
         try:
             dis = int(self.E1.get())
             if dis >= 0:
-                self.parent.noeud_info[self.id_][0] = dis
+                self.parent.route_info[self.id_][0] = dis
         except:
             pass
         try:
