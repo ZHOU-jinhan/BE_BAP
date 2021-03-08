@@ -34,7 +34,7 @@ class BAP(BAP_GUI.FenPrincipale):
         besoin_matrix = np.repeat(np.array(self.noeud_info)[:,0],n).reshape([n,n])
         prop_matrix_a = besoin_matrix//lib_matrix
         prop_matrix_b = besoin_matrix%lib_matrix
-        prop_matrix = ((prop_matrix_a-1)*prop_matrix_a+prop_matrix_b*prop_matrix_a)/besoin_matrix
+        prop_matrix = ((prop_matrix_a-1)*prop_matrix_a+prop_matrix_b*prop_matrix_a+0.5)/besoin_matrix
         self.temps_matrix = distance_matrix/vitesse_matrix+1/freq_matrix* prop_matrix
 
     def ajouter_noeud(self,event):
