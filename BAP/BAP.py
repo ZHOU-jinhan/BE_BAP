@@ -29,10 +29,13 @@ class BAP(BAP_GUI.FenPrincipale):
         lib_matrix = self.route_info[:,:,3]
         lib_matrix = np.where(lib_matrix!=-1, lib_matrix, 1)
         n = len(self.liste_node)
-        lib_matrix -= np.repeat(np.array(self.noeud_info)[:,1],n).reshape([n,n])
+        lib_matrix += np.repeat(np.array(self.noeud_info)[:,1],n).reshape([n,n])
         lib_matrix = np.where(lib_matrix!=0, lib_matrix, 1e-15)
         besoin_matrix = np.repeat(np.array(self.noeud_info)[:,0],n).reshape([n,n])
-        self.temps_matrix = distance_matrix/vitesse_matrix+1/freq_matrix*besoin_matrix/lib_matrix
+        prop_matrix_a = besoin_matrix//lib_matrix
+        prop_matrix_b = besoin_matrix%lib_matrix
+        prop_matrix = ((prop_matrix_a-1)*prop_matrix_a+prop_matrix_b*prop_matrix_a)/besoin_matrix
+        self.temps_matrix = distance_matrix/vitesse_matrix+1/freq_matrix* prop_matrix
 
     def ajouter_noeud(self,event):
         BAP_GUI.FenPrincipale.ajouter_noeud(self,event)

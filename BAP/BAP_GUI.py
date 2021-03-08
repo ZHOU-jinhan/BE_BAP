@@ -215,7 +215,7 @@ class InfoRoute(Tk):
             self.parent.zoneAffichage.delete(self.parent.liste_node_info[self.id_])
         x1,y1 = self.parent.x_nodes[self.id_[0]],self.parent.y_nodes[self.id_[0]]
         x2,y2 = self.parent.x_nodes[self.id_[1]],self.parent.y_nodes[self.id_[1]]
-        m,n,f,k = self.parent.noeud_info[self.id_]
+        m,n,f,k = self.parent.route_info[self.id_]
         if x2>x1:
             self.parent.liste_route_info[self.id_] = self.parent.zoneAffichage.\
                                                      create_text((x1+x2)/2+50,(y1+y2)/2,fill="blue",\
